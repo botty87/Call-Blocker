@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Call Blocker</string>
+    <string name="error">Error</string>
+    <string name="retry">Retry?</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="user_profile">User profile</string>
+    <string name="delete">Delete</string>
+    <string name="logout">Logout</string>
+    <string name="confirm_logout">Do you confirm the logout?</string>
+    <string name="confirm_delete">Do you confirm the user delete? This action will not be reversible!</string>
+    <string name="user_logout">User logout…</string>
+    <string name="user_delete">User delete…</string>
+    <string name="error_user_logout">Error while logout user.</string>
+    <string name="error_user_delete">Error while delete user.</string>
+    <string name="no_user_name">No user name</string>
+    <string name="blocked">Blocked</string>
+    <string name="allowed">Allowed</string>
+    <string name="countries">Countries</string>
+    <string name="add">add</string>
+    <string name="description_optional">Description (optional)</string>
+    <string name="phone_number">Phone number</string>
+    <string name="add_number">Add number</string>
+    <string name="insert_valid_phone_number">Insert a valid phone number!</string>
+    <string name="phone_number_already_saved">Phone number already saved!</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="number_removed">Number removed!</string>
+    <string name="undo">undo</string>
+    <string name="error_re_adding_phone_number">Error while re-adding phone number</string>
+    <string name="settings">Settings</string>
+    <string name="read_from_contact_preference">Read from contacts while typing in description?</string>
+    <string name="allow_all_desc">Allow all the numbers, except which are in the blocked list</string>
+    <string name="block_all_desc">Block all the numbers, except which are in the allowed list</string>
+    <string name="apply_to">Apply to</string>
+    <string name="call">Call</string>
+    <string name="sms">SMS</string>
+    <string name="no_apply_to_warning">All filters disabled! Nothing will applied when you receive a call or a sms!</string>
+</resources>
