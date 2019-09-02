@@ -10,17 +10,19 @@ import androidx.lifecycle.ViewModelProviders
 import com.afollestad.materialdialogs.MaterialDialog
 import com.call.blocker.R
 import com.call.blocker.data.SettingsContainer
+import com.call.blocker.data.deleteUserData
+import com.call.blocker.data.observeProperty
 import com.call.blocker.databinding.ActivitySettingsBinding
 import com.call.blocker.tools.*
-import com.chibatching.kotpref.livedata.asLiveData
 import com.firebase.ui.auth.AuthUI
 import com.github.florent37.runtimepermission.kotlin.askPermission
 import com.tingyik90.snackprogressbar.SnackProgressBar
 import com.tingyik90.snackprogressbar.SnackProgressBarManager
 import es.dmoral.toasty.Toasty
 import kotlinx.android.synthetic.main.activity_settings.*
+import kotlinx.coroutines.*
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     private val snackProgressBarManager by lazy { SnackProgressBarManager(mainLayout, this) }
 
@@ -40,13 +42,11 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
 
-            SettingsContainer
-                .asLiveData(SettingsContainer::applyTo)
-                .observe(this) { applyTo ->
-                    if(applyTo == SettingsContainer.ApplyTo.NONE) {
-                        showWarningToast(R.string.no_apply_to_warning, Toasty.LENGTH_LONG)
-                    }
+            SettingsContainer.observeProperty(SettingsContainer::applyTo, this) { applyTo ->
+                if(applyTo == SettingsContainer.ApplyTo.NONE) {
+                    showWarningToast(R.string.no_apply_to_warning, Toasty.LENGTH_LONG)
                 }
+            }
         }
 
         super.onCreate(savedInstanceState)
@@ -89,15 +89,26 @@ class SettingsActivity : AppCompatActivity() {
             SnackProgressBarManager(mainLayout, this@SettingsActivity)
                 .show(snackProgress, SnackProgressBarManager.LENGTH_INDEFINITE)
 
-            getUser()!!.delete().addOnCompleteListener { task ->
-                if(task.isSuccessful) {
-                    SettingsContainer.resetToDefault()
-                    Intent().apply { putExtra(Constants.LOGOUT_RESULT_KEY, true) }.run {
-                        setResult(Activity.RESULT_OK, this)
-                        finish()
+            launch {
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        deleteUserData()
                     }
-                } else {
-                    task.exception?.run { logException(this) }
+                }.onSuccess {
+                    getUser()!!.delete().addOnCompleteListener { task ->
+                        if(task.isSuccessful) {
+                            SettingsContainer.resetToDefault()
+                            Intent().apply { putExtra(Constants.LOGOUT_RESULT_KEY, true) }.run {
+                                setResult(Activity.RESULT_OK, this)
+                                finish()
+                            }
+                        } else {
+                            task.exception?.run { logException(this) }
+                            showErrorToast(R.string.error_user_delete)
+                            enableButton(true)
+                        }
+                    }
+                }.onFailure {
                     showErrorToast(R.string.error_user_delete)
                     enableButton(true)
                 }
@@ -105,8 +116,8 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         MaterialDialog(this).show {
-            title(R.string.logout)
-            message(text = getString(R.string.confirm_logout))
+            title(R.string.delete)
+            message(text = getString(R.string.confirm_delete))
             negativeButton(R.string.no)
             positiveButton(R.string.yes) { performDelete() }
         }

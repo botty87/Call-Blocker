@@ -6,7 +6,7 @@ import com.google.firebase.firestore.Exclude
 
 data class PhoneNumber(
     val number: String,
-    var description: String?,
+    var description: String? = null,
     @get: Exclude
     val id: String? = null) {
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.call.blocker.R
 import com.call.blocker.data.SettingsContainer
+import com.chibatching.kotpref.livedata.asLiveData
 
 class SettingsViewModel(): ViewModel() {
 
@@ -18,17 +19,9 @@ class SettingsViewModel(): ViewModel() {
         notifyPropertyChanged(BR.readFromContacts)
     }*/
 
-    val readFromContacts = SettingLiveData(
-        SettingsContainer::readFromContacts,
-        SettingsContainer.readFromContacts
-    )
-    val filterStatusForSwitch =
-        SettingFilterStatusLiveData(SettingsContainer.filterMode)
-    val filterString: LiveData<Int> = Transformations.map(filterStatusForSwitch, ::getFilterStringRes)
+    val readFromContacts = SettingBooleanLiveData(SettingsContainer::readFromContacts, SettingsContainer.readFromContacts)
+    val filterStatusForSwitch = SettingFilterStatusLiveData(SettingsContainer.filterMode)
+    val notificationEnabled = SettingBooleanLiveData(SettingsContainer::isNotificationEnabled, SettingsContainer.isNotificationEnabled)
     val applyToCall = SettingApplyToCallLiveData()
     val applyToSMS = SettingApplyToSMSLiveData()
-
-    private fun getFilterStringRes(blockAll: Boolean): Int {
-        return if(blockAll) R.string.block_all_desc else R.string.allow_all_desc
-    }
 }

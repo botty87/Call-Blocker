@@ -37,4 +37,9 @@
     <string name="call">Call</string>
     <string name="sms">SMS</string>
     <string name="no_apply_to_warning">All filters disabled! Nothing will applied when you receive a call or a sms!</string>
+    <string name="no_app_permission">App is useless without these permissions.</string>
+    <string name="call_blocked_from">Call blocked from</string>
+    <string name="show_notification_message">Show a notification when call is blocked. Useful to keep trace of the calls</string>
+    <string name="calls_blocked">Calls blocked</string>
+    <string name="call_blocked">Call blocked</string>
 </resources>

@@ -1,10 +1,13 @@
-package com.call.blocker.tools
+package com.call.blocker.data
 
 import com.call.blocker.R
-import com.call.blocker.data.PhoneNumber
 import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedSuperFragment
+import com.call.blocker.settingsActivity.SettingsActivity
+import com.call.blocker.tools.getUser
+import com.call.blocker.tools.logException
 import com.firebase.ui.firestore.SnapshotParser
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlin.coroutines.resume
@@ -18,16 +21,23 @@ private const val ALLOWED_KEY = "allowed"
 private const val NUMBER_FIELD_KEY = "number"
 private const val DESCRIPTION_FIELD_KEY = "description"
 
+private val userDocument: DocumentReference
+    get() {
+        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid)
+    }
+
 private val blockedRef: CollectionReference
     get() {
-        val user = getUser()!!
-        return Firebase.firestore.collection(USERS_KEY).document(user.uid).collection(BLOCKED_KEY)
+        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid).collection(
+            BLOCKED_KEY
+        )
     }
 
 private val allowedRef: CollectionReference
     get() {
-        val user = getUser()!!
-        return Firebase.firestore.collection(USERS_KEY).document(user.uid).collection(ALLOWED_KEY)
+        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid).collection(
+            ALLOWED_KEY
+        )
     }
 
 suspend fun AllowedBlockedSuperFragment.addAllowedPhone(phoneNumber: PhoneNumber) {
@@ -68,11 +78,15 @@ private suspend fun AllowedBlockedSuperFragment.addPhone(phoneNumber: PhoneNumbe
         }
 }
 
-fun AllowedBlockedSuperFragment.getBlockedNumbersQuery() = blockedRef.orderBy(DESCRIPTION_FIELD_KEY)
+fun getBlockedNumbersQuery() = blockedRef.orderBy(
+    DESCRIPTION_FIELD_KEY
+)
 
-fun AllowedBlockedSuperFragment.getAllowedNumbersQuery() = allowedRef.orderBy(DESCRIPTION_FIELD_KEY)
+fun getAllowedNumbersQuery() = allowedRef.orderBy(
+    DESCRIPTION_FIELD_KEY
+)
 
-fun AllowedBlockedSuperFragment.getPhoneNumberParser() = SnapshotParser { snapshot ->
+fun getPhoneNumberParser() = SnapshotParser { snapshot ->
     val phone = snapshot.getString(NUMBER_FIELD_KEY)!!
     val description = snapshot.getString(DESCRIPTION_FIELD_KEY)
     PhoneNumber(phone, description, snapshot.id)
@@ -84,4 +98,13 @@ fun AllowedBlockedSuperFragment.removeBlockedPhone(phoneNumber: PhoneNumber) {
 
 fun AllowedBlockedSuperFragment.removeAllowedPhone(phoneNumber: PhoneNumber) {
     allowedRef.document(phoneNumber.id!!).delete()
+}
+
+suspend fun SettingsActivity.deleteUserData() = suspendCoroutine<Void> { continuation ->
+    userDocument.delete()
+        .addOnSuccessListener(this) { continuation.resume(it) }
+        .addOnFailureListener(this) { exception ->
+            logException(exception)
+            continuation.resumeWithException(exception)
+        }
 }

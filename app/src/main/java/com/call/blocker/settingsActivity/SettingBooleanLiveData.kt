@@ -3,21 +3,19 @@ package com.call.blocker.settingsActivity
 import androidx.lifecycle.MutableLiveData
 import kotlin.reflect.KMutableProperty0
 
-class SettingLiveData<T>(private val property: KMutableProperty0<T>, default: T? = null): MutableLiveData<T>() {
+class SettingBooleanLiveData(private val property: KMutableProperty0<Boolean>, default: Boolean): MutableLiveData<Boolean>() {
     private var firstSet = true
     init {
         value = default
     }
 
-    override fun setValue(value: T?) {
+    override fun setValue(value: Boolean?) {
         super.setValue(value)
         if(firstSet) {
             firstSet = false
         }
         else {
-            value?.let {
-                property.set(it)
-            }
+            value?.run { property.set(this) }
         }
     }
 }

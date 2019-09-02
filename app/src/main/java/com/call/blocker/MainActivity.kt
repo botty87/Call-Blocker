@@ -1,5 +1,7 @@
 package com.call.blocker
 
+import android.Manifest
+import android.app.role.RoleManager
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -18,11 +20,19 @@ import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnAction
 import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnShown
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
+import com.github.florent37.runtimepermission.kotlin.askPermission
 import com.tingyik90.snackprogressbar.SnackProgressBar
 import com.tingyik90.snackprogressbar.SnackProgressBarManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import org.jetbrains.anko.startActivityForResult
+
+import android.content.Context
+import android.telecom.TelecomManager
+import androidx.core.content.getSystemService
+import androidx.core.role.RoleManagerCompat
+import com.call.blocker.tools.Constants.CALL_SCREENING_REQ_CODE
+
 
 class MainActivity : AppCompatActivity(), OnPageSelectedListener,
     AllowedBlockedFragmentInterface,
@@ -32,32 +42,49 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
     private val pagerAdapter by lazy { MyPagerAdapter(supportFragmentManager, this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        fun setupViewPager() {
-            viewPager.adapter = pagerAdapter
-            viewPager.addOnPageChangeListener(this)
-            navigationBar.setOnNavigationItemSelectedListener { menuItem ->
-                when(menuItem.itemId) {
-                    R.id.blocked -> viewPager.currentItem = 0
-                    R.id.allowed -> viewPager.currentItem = 1
-                    R.id.countries -> viewPager.currentItem = 2
-                    else -> throw Exception("Wrong index")
-                }
-                true
-            }
-            fabAddNumber.setOnClickListener {
-                (pagerAdapter.activeFragment as AllowedBlockedSuperFragment).addNumberFabClicked()
-            }
-        }
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setupViewPager()
 
+        askPermission(Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG) {
+
+            if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+                val intent = roleManager.createRequestRoleIntent("android.app.role.CALL_SCREENING")
+                startActivityForResult(intent, Constants.CALL_SCREENING_REQ_CODE)
+            }
+            else {
+                init()
+            }
+        }.onDeclined {
+            showErrorToast(R.string.no_app_permission)
+            finish()
+        }
+    }
+
+    private fun init() {
         if(hasUser()) {
-            initialize()
+            setupViewPager()
         }
         else {
             login()
+        }
+    }
+
+    private fun setupViewPager() {
+        viewPager.adapter = pagerAdapter
+        viewPager.addOnPageChangeListener(this)
+        navigationBar.setOnNavigationItemSelectedListener { menuItem ->
+            when(menuItem.itemId) {
+                R.id.blocked -> viewPager.currentItem = 0
+                R.id.allowed -> viewPager.currentItem = 1
+                R.id.countries -> viewPager.currentItem = 2
+                else -> throw Exception("Wrong index")
+            }
+            true
+        }
+        fabAddNumber.setOnClickListener {
+            (pagerAdapter.activeFragment as AllowedBlockedSuperFragment).addNumberFabClicked()
         }
     }
 
@@ -75,10 +102,6 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
         )
     }
 
-    private fun initialize() {
-
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -87,7 +110,7 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
                 val response = IdpResponse.fromResultIntent(data)
 
                 if (resultCode == RESULT_OK) {
-                    initialize()
+                    setupViewPager()
                 } else {
                     response?.error?.run {
                         MaterialDialog(this@MainActivity).show {
@@ -105,6 +128,16 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
             SETTINGS_ACTIVITY_REQ_CODE -> {
                 if(resultCode == RESULT_OK && data?.getBooleanExtra(Constants.LOGOUT_RESULT_KEY, false) == true) {
                     login()
+                }
+            }
+
+            CALL_SCREENING_REQ_CODE -> {
+                if(resultCode == android.app.Activity.RESULT_OK) {
+                    init()
+                }
+                else {
+                    showErrorToast(R.string.no_app_permission)
+                    finish()
                 }
             }
         }

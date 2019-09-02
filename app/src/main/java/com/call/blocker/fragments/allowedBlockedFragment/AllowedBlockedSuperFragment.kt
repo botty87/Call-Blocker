@@ -20,10 +20,8 @@ import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.customview.getCustomView
 
 import com.call.blocker.R
-import com.call.blocker.data.ContactForAdapter
+import com.call.blocker.data.*
 
-import com.call.blocker.data.PhoneNumber
-import com.call.blocker.data.SettingsContainer
 import com.call.blocker.tools.*
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.github.florent37.runtimepermission.kotlin.askPermission
@@ -72,6 +70,8 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
                 editTextPhoneNumber.isEnabled = !locked
             }
 
+            val phoneNoSpaces = phone.replace("\\s+".toRegex(), "")
+
             dialog.getCustomView().run {
                 launch {
                     hideKeyboard(editTextPhoneNumber)
@@ -80,8 +80,8 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
                     runCatching {
                         withContext(Dispatchers.IO) {
                             when(type) {
-                                Type.ALLOWED -> addAllowedPhone(PhoneNumber(phone, description))
-                                Type.BLOCKED -> addBlockedPhone(PhoneNumber(phone, description))
+                                Type.ALLOWED -> addAllowedPhone(PhoneNumber(phoneNoSpaces, description))
+                                Type.BLOCKED -> addBlockedPhone(PhoneNumber(phoneNoSpaces, description))
                             }
                         }
                     }.onSuccess {

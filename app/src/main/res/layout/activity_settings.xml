@@ -75,21 +75,59 @@
                         android:text="@string/read_from_contact_preference"
                         android:checked="@={settings.readFromContacts}" />
 
+
                 <Switch
-                        android:id="@+id/switchAllowBlock"
+                        android:id="@+id/switchNotification"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toBottomOf="@id/switchReadContacts"
                         android:layout_marginTop="25dp"
-                        android:text="@{settings.filterString}"
-                        android:checked="@={settings.filterStatusForSwitch}" />
+                        android:text="@string/show_notification_message"
+                        android:checked="@={settings.notificationEnabled}" />
+
+                <RadioGroup
+                        android:id="@+id/radioGroupAllowBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        app:layout_constraintTop_toBottomOf="@id/switchNotification"
+                        android:weightSum="2"
+                        android:layout_marginTop="25dp">
+
+                    <RadioButton
+                            android:id="@+id/radioButtonAllow"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:padding="5dp"
+                            android:gravity="center"
+                            android:background="@drawable/allow_all_background"
+                            android:textColor="@color/allow_block_text_color"
+                            android:button="@android:color/transparent"
+                            android:checked="@={settings.filterStatusForSwitch}"
+                            android:text="@string/allow_all_desc"/>
+
+                    <RadioButton
+                            android:id="@+id/radioButtonBlock"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:padding="5dp"
+                            android:gravity="center"
+                            android:checked="true"
+                            android:button="@android:color/transparent"
+                            android:background="@drawable/block_all_background"
+                            android:textColor="@color/allow_block_text_color"
+                            android:text="@string/block_all_desc"/>
+
+                </RadioGroup>
 
                 <TextView
                         android:id="@+id/textViewApplyTo"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="15dp"
-                        app:layout_constraintTop_toBottomOf="@id/switchAllowBlock"
+                        app:layout_constraintTop_toBottomOf="@id/radioGroupAllowBlock"
                         android:gravity="center"
                         android:textSize="16sp"
                         android:textColor="@android:color/black"
