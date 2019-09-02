@@ -7,16 +7,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.telephony.TelephonyManager
 import com.android.internal.telephony.ITelephony
-import com.call.blocker.R
 import com.call.blocker.data.*
+import com.call.blocker.data.SettingsContainer.ApplyTo.NONE
+import com.call.blocker.data.SettingsContainer.ApplyTo.SMS
+import com.call.blocker.data.SettingsContainer.Filter.ALLOW_ALL
+import com.call.blocker.data.SettingsContainer.Filter.BLOCK_ALL
 import com.call.blocker.tools.logException
 import com.google.firebase.firestore.Source
-import es.dmoral.toasty.Toasty
-
-import com.call.blocker.data.SettingsContainer.Filter.*
-import com.call.blocker.data.SettingsContainer.ApplyTo.*
-import com.call.blocker.tools.Constants
-import io.karn.notify.Notify
 
 
 //Used for Android < 9 devices.

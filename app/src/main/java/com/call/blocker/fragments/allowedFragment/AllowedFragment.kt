@@ -19,7 +19,4 @@ class AllowedFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_allowed, container, false)
     }
 
-    fun addNumberFabClicked() {
-
-    }
 }

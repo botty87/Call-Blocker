@@ -5,14 +5,13 @@ import android.text.Editable
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
-import timber.log.Timber
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import es.dmoral.toasty.Toasty
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import es.dmoral.toasty.Toasty
+import timber.log.Timber
 
 fun hasUser(): Boolean {
     return FirebaseAuth.getInstance().currentUser != null
@@ -20,10 +19,6 @@ fun hasUser(): Boolean {
 
 fun getUser(): FirebaseUser? {
     return FirebaseAuth.getInstance().currentUser
-}
-
-fun Context.showErrorToast(message: String) {
-    Toasty.error(this, message).show()
 }
 
 fun Context.showErrorToast(stringID: Int, length: Int = Toasty.LENGTH_SHORT) {

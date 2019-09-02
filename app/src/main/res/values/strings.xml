@@ -4,7 +4,6 @@
     <string name="retry">Retry?</string>
     <string name="no">No</string>
     <string name="yes">Yes</string>
-    <string name="user_profile">User profile</string>
     <string name="delete">Delete</string>
     <string name="logout">Logout</string>
     <string name="confirm_logout">Do you confirm the logout?</string>
@@ -17,7 +16,6 @@
     <string name="blocked">Blocked</string>
     <string name="allowed">Allowed</string>
     <string name="countries">Countries</string>
-    <string name="add">add</string>
     <string name="description_optional">Description (optional)</string>
     <string name="phone_number">Phone number</string>
     <string name="add_number">Add number</string>

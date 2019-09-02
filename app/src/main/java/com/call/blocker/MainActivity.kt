@@ -1,21 +1,27 @@
 package com.call.blocker
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.role.RoleManager
+import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.call.blocker.fragments.MyPagerAdapter
-import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedSuperFragment
 import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedFragmentInterface
+import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedSuperFragment
 import com.call.blocker.settingsActivity.SettingsActivity
-import com.call.blocker.tools.*
+import com.call.blocker.tools.Constants
+import com.call.blocker.tools.Constants.CALL_SCREENING_REQ_CODE
 import com.call.blocker.tools.Constants.LOGIN_REQ_CODE
 import com.call.blocker.tools.Constants.SETTINGS_ACTIVITY_REQ_CODE
+import com.call.blocker.tools.OnPageSelectedListener
+import com.call.blocker.tools.hasUser
+import com.call.blocker.tools.showErrorToast
 import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnAction
 import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnShown
 import com.firebase.ui.auth.AuthUI
@@ -24,14 +30,9 @@ import com.github.florent37.runtimepermission.kotlin.askPermission
 import com.tingyik90.snackprogressbar.SnackProgressBar
 import com.tingyik90.snackprogressbar.SnackProgressBarManager
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import org.jetbrains.anko.startActivityForResult
-
-import android.content.Context
-import android.telecom.TelecomManager
-import androidx.core.content.getSystemService
-import androidx.core.role.RoleManagerCompat
-import com.call.blocker.tools.Constants.CALL_SCREENING_REQ_CODE
 
 
 class MainActivity : AppCompatActivity(), OnPageSelectedListener,
@@ -41,6 +42,7 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
     private val snackProgressBarManager by lazy { SnackProgressBarManager(coordLayout, this) }
     private val pagerAdapter by lazy { MyPagerAdapter(supportFragmentManager, this) }
 
+    @SuppressLint("WrongConstant")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -51,7 +53,7 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
             if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
                 val intent = roleManager.createRequestRoleIntent("android.app.role.CALL_SCREENING")
-                startActivityForResult(intent, Constants.CALL_SCREENING_REQ_CODE)
+                startActivityForResult(intent, CALL_SCREENING_REQ_CODE)
             }
             else {
                 init()
