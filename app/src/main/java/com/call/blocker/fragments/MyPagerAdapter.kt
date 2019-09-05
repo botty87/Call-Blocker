@@ -6,7 +6,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import com.call.blocker.R
-import com.call.blocker.fragments.allowedFragment.AllowedFragment
+import com.call.blocker.fragments.countriesFragment.CountriesFragment
 import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedSuperFragment
 import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedSuperFragment.Type
 
@@ -19,9 +19,9 @@ class MyPagerAdapter(fm: FragmentManager, private val context: Context): Fragmen
     
     override fun getItem(position: Int): Fragment {
         return when(position) {
-            0 -> AllowedBlockedSuperFragment(Type.BLOCKED)
+            2 -> AllowedBlockedSuperFragment(Type.BLOCKED) //TODO restore
             1 -> AllowedBlockedSuperFragment(Type.ALLOWED)
-            2 -> AllowedFragment()
+            0 -> CountriesFragment()
             else -> throw Exception("Wrong index!")
         }
     }

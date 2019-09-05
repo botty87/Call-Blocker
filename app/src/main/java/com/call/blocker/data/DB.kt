@@ -21,7 +21,7 @@ private const val ALLOWED_KEY = "allowed"
 private const val NUMBER_FIELD_KEY = "number"
 private const val DESCRIPTION_FIELD_KEY = "description"
 
-private val userDocument: DocumentReference
+val userDocument: DocumentReference
     get() {
         return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid)
     }
@@ -85,6 +85,10 @@ fun getBlockedNumbersQuery() = blockedRef.orderBy(
 fun getAllowedNumbersQuery() = allowedRef.orderBy(
     DESCRIPTION_FIELD_KEY
 )
+
+fun getUserCountries() {
+
+}
 
 fun getPhoneNumberParser() = SnapshotParser { snapshot ->
     val phone = snapshot.getString(NUMBER_FIELD_KEY)!!

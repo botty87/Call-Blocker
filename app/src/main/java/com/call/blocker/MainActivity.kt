@@ -5,11 +5,15 @@ import android.annotation.SuppressLint
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.LocaleList
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.os.ConfigurationCompat
 import com.afollestad.materialdialogs.MaterialDialog
 import com.call.blocker.fragments.MyPagerAdapter
 import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedFragmentInterface
@@ -27,12 +31,14 @@ import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnShown
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.github.florent37.runtimepermission.kotlin.askPermission
+import com.hbb20.CountryCodePicker
 import com.tingyik90.snackprogressbar.SnackProgressBar
 import com.tingyik90.snackprogressbar.SnackProgressBarManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import org.jetbrains.anko.startActivityForResult
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), OnPageSelectedListener,

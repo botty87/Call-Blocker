@@ -6,7 +6,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.afollestad.materialdialogs.MaterialDialog
 import com.call.blocker.R
 import com.call.blocker.data.SettingsContainer
@@ -26,7 +26,7 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     private val snackProgressBarManager by lazy { SnackProgressBarManager(mainLayout, this) }
 
-    private val settings by lazy { ViewModelProviders.of(this).get(SettingsViewModel::class.java) }
+    private val settings by lazy { ViewModelProvider(this).get(SettingsViewModel::class.java) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         fun checkContactsPermission() {
