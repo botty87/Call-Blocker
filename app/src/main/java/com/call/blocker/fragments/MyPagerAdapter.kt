@@ -19,9 +19,9 @@ class MyPagerAdapter(fm: FragmentManager, private val context: Context): Fragmen
     
     override fun getItem(position: Int): Fragment {
         return when(position) {
-            2 -> AllowedBlockedSuperFragment(Type.BLOCKED) //TODO restore
+            0 -> AllowedBlockedSuperFragment(Type.BLOCKED) //TODO restore
             1 -> AllowedBlockedSuperFragment(Type.ALLOWED)
-            0 -> CountriesFragment()
+            2 -> CountriesFragment()
             else -> throw Exception("Wrong index!")
         }
     }

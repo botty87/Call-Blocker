@@ -103,7 +103,7 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                                 finish()
                             }
                         } else {
-                            task.exception?.run { logException(this) }
+                            task.exception?.log()
                             showErrorToast(R.string.error_user_delete)
                             enableButton(true)
                         }
@@ -142,7 +142,7 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                         }
                     }
                     else {
-                        task.exception?.run { logException(this) }
+                        task.exception?.log()
                         showErrorToast(R.string.error_user_logout)
                         enableButton(true)
                     }

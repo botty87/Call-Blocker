@@ -2,37 +2,27 @@ package com.call.blocker.receiver
 
 import android.telecom.Call
 import android.telecom.CallScreeningService
-import com.call.blocker.data.*
-import com.google.firebase.firestore.Source
+import com.call.blocker.data.PhoneNumber
+import com.call.blocker.data.SettingsContainer
+import com.google.firebase.firestore.ListenerRegistration
 
 class MyCallScreeningService: CallScreeningService() {
+
+    private var userListener: ListenerRegistration? = null
+
     override fun onScreenCall(callDetails: Call.Details) {
         val number = callDetails.handle.schemeSpecificPart
+        clearListeners()
 
-        when(SettingsContainer.filterMode) {
+        userListener = when(SettingsContainer.filterMode) {
             SettingsContainer.Filter.ALLOW_ALL -> {
-                getBlockedNumbersQuery().get(Source.CACHE).addOnSuccessListener { snapshot ->
-                    val parser = getPhoneNumberParser()
-                    snapshot.documents.firstOrNull {docSnapshot ->
-                        val phoneNumber = parser.parseSnapshot(docSnapshot)
-                        phoneNumber.number == number
-                    }?.let { docSnapshot ->
-                        endCall(callDetails, parser.parseSnapshot(docSnapshot))
-                    } ?: allowCall(callDetails)
-                }
+                CommonBlockTools.checkAllowEndCall(number,
+                    { endCall(callDetails, it) },
+                    { allowCall(callDetails) })
             }
-
-            SettingsContainer.Filter.BLOCK_ALL -> {
-                getAllowedNumbersQuery().get(Source.CACHE).addOnSuccessListener { snapshot ->
-                    val parser = getPhoneNumberParser()
-                    snapshot.documents.firstOrNull {docSnapshot ->
-                        val phoneNumber = parser.parseSnapshot(docSnapshot)
-                        phoneNumber.number == number
-                    }?.run {
-                        allowCall(callDetails)
-                    } ?: endCall(callDetails, PhoneNumber(number))
-                }
-            }
+            SettingsContainer.Filter.BLOCK_ALL -> CommonBlockTools.checkBlockEndCall(number,
+                { endCall(callDetails, it) },
+                {allowCall(callDetails)})
         }
     }
 
@@ -55,5 +45,15 @@ class MyCallScreeningService: CallScreeningService() {
         respondToCall(callDetails, response)
 
         CommonBlockTools.notifyBlockedCall(this, phoneNumber)
+    }
+
+    override fun onDestroy() {
+        clearListeners()
+        super.onDestroy()
+    }
+
+    private fun clearListeners() {
+        userListener?.remove()
+        userListener = null
     }
 }

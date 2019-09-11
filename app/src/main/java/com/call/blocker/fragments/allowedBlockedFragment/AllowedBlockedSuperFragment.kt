@@ -38,8 +38,8 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
     private var mainInterface: AllowedBlockedFragmentInterface? = null
     private val retrieveNumbersQuery by lazy {
         when(type) {
-            Type.ALLOWED -> getAllowedNumbersQuery()
-            Type.BLOCKED -> getBlockedNumbersQuery()
+            Type.ALLOWED -> getUserAllowedNumbersQuery()
+            Type.BLOCKED -> getUserBlockedNumbersQuery()
         }
     }
 
@@ -87,7 +87,7 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
                     }.onSuccess {
                         dialog.dismiss()
                     }.onFailure { exception ->
-                        logException(exception)
+                        exception.log()
                         exception.localizedMessage?.run{ showErrorToast(this) }
                         lockDialog(false)
                         progressBar.hide()
@@ -196,7 +196,7 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
                     withContext(Dispatchers.Main) {
                         showErrorToast(R.string.error_re_adding_phone_number)
                     }
-                    logException(e)
+                    e.log()
                 }
             }
         }

@@ -2,8 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         package="com.call.blocker">
+    <uses-feature android:name="android.hardware.telephony"
+            android:required="true"/>
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -50,8 +53,16 @@
             </intent-filter>
         </service>
 
+        <service
+                android:name=".receiver.oldCallReceiver.BlockService"
+                android:exported="false" >
+            <intent-filter>
+                <action android:name="com.call.blocker.receiver.oldCallReceiver.BlockService" />
+            </intent-filter>
+        </service>
+
         <receiver
-                android:name=".receiver.IncomingCallReceiver"
+                android:name=".receiver.oldCallReceiver.IncomingCallReceiver"
                 android:enabled="true"
                 android:exported="true">
             <intent-filter>

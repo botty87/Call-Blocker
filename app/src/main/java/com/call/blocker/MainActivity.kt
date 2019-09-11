@@ -5,15 +5,11 @@ import android.annotation.SuppressLint
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.os.LocaleList
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.res.ResourcesCompat
-import androidx.core.os.ConfigurationCompat
 import com.afollestad.materialdialogs.MaterialDialog
 import com.call.blocker.fragments.MyPagerAdapter
 import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedFragmentInterface
@@ -31,14 +27,12 @@ import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnShown
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.github.florent37.runtimepermission.kotlin.askPermission
-import com.hbb20.CountryCodePicker
 import com.tingyik90.snackprogressbar.SnackProgressBar
 import com.tingyik90.snackprogressbar.SnackProgressBarManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import org.jetbrains.anko.startActivityForResult
-import java.util.*
 
 
 class MainActivity : AppCompatActivity(), OnPageSelectedListener,
@@ -48,26 +42,53 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
     private val snackProgressBarManager by lazy { SnackProgressBarManager(coordLayout, this) }
     private val pagerAdapter by lazy { MyPagerAdapter(supportFragmentManager, this) }
 
-    @SuppressLint("WrongConstant")
+    @SuppressLint("WrongConstant", "NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        fun endNoPermission() {
+            showErrorToast(R.string.no_app_permission)
+            finish()
+        }
+
         askPermission(Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG) {
+            val vers = android.os.Build.VERSION.SDK_INT
+            when {
+                vers >= android.os.Build.VERSION_CODES.Q -> {
+                    val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+                    val intent = roleManager.createRequestRoleIntent("android.app.role.CALL_SCREENING")
+                    startActivityForResult(intent, CALL_SCREENING_REQ_CODE)
+                }
 
-            if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                vers == android.os.Build.VERSION_CODES.P -> {
+                    askPermission(Manifest.permission.ANSWER_PHONE_CALLS) {
+                        init()
+                    }.onDeclined {
+                        endNoPermission()
+                    }
+                }
+
+                else -> init()
+            }
+
+            /*if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
                 val intent = roleManager.createRequestRoleIntent("android.app.role.CALL_SCREENING")
                 startActivityForResult(intent, CALL_SCREENING_REQ_CODE)
             }
             else {
                 init()
-            }
+            }*/
         }.onDeclined {
-            showErrorToast(R.string.no_app_permission)
-            finish()
+            endNoPermission()
         }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        val c = requestCode
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     private fun init() {

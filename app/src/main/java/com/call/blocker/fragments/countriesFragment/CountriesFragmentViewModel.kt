@@ -1,11 +1,9 @@
 package com.call.blocker.fragments.countriesFragment
 
-import android.app.Application
 import android.content.res.Resources
 import androidx.core.os.ConfigurationCompat
 import androidx.lifecycle.*
 import com.call.blocker.data.country.CountriesLiveData
-import com.call.blocker.data.country.Country
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*

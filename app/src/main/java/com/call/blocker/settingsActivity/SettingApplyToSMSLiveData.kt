@@ -3,7 +3,7 @@ package com.call.blocker.settingsActivity
 import androidx.lifecycle.MutableLiveData
 import com.call.blocker.data.SettingsContainer
 import com.call.blocker.data.SettingsContainer.ApplyTo.*
-import com.call.blocker.tools.logException
+import com.call.blocker.tools.log
 
 class SettingApplyToSMSLiveData: MutableLiveData<Boolean>() {
 
@@ -21,14 +21,14 @@ class SettingApplyToSMSLiveData: MutableLiveData<Boolean>() {
                 when(SettingsContainer.applyTo) {
                     NONE -> SettingsContainer.applyTo = SMS
                     CALL -> SettingsContainer.applyTo = BOTH
-                    else -> logException(Exception("Sms filter wrong selection"))
+                    else -> Exception("Sms filter wrong selection").log()
                 }
             }
             else {
                 when(SettingsContainer.applyTo) {
                     BOTH -> SettingsContainer.applyTo = CALL
                     SMS -> SettingsContainer.applyTo = NONE
-                    else -> logException(Exception("Sms filter wrong selection"))
+                    else -> Exception("Sms filter wrong selection").log()
                 }
             }
         }

@@ -1,20 +1,17 @@
 package com.call.blocker.data.country
 
-import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import com.call.blocker.data.userDocument
-import com.call.blocker.tools.logException
+import com.call.blocker.tools.log
 import com.google.firebase.firestore.ListenerRegistration
 import java.util.*
 
-class CountriesLiveData: MutableLiveData<Array<Country>>() {
+class CountriesLiveData: MutableLiveData<List<Country>>() {
     companion object {
         private const val COUNTRIES_KEY = "countries"
     }
 
     private var userListener: ListenerRegistration? = null
-
-    private lateinit var context: Context
 
     var locales: List<Locale>? = null
     set(value) {
@@ -24,7 +21,7 @@ class CountriesLiveData: MutableLiveData<Array<Country>>() {
             userListener = userDocument.addSnapshotListener { documentSnapshot, exception ->
                 documentSnapshot?.let { snapshot ->
                     val userCountries = snapshot[COUNTRIES_KEY] as MutableList<String>?
-                    Array(locales.size) { index ->
+                    List(locales.size) { index ->
                         val code =locales[index].country
                         val selected = userCountries?.contains(code) ?: false
                         val name = locales[index].displayCountry
@@ -33,8 +30,7 @@ class CountriesLiveData: MutableLiveData<Array<Country>>() {
                         postValue(this)
                     }
                 }
-
-                exception?.run { logException(this) }
+                exception?.log()
             }
         }
     }
