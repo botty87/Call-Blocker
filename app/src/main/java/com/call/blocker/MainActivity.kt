@@ -24,6 +24,7 @@ import com.call.blocker.tools.hasUser
 import com.call.blocker.tools.showErrorToast
 import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnAction
 import com.call.blocker.tools.snackBarProgressKotlin.SnackBarOnShown
+import com.call.blocker.tools.sync.setSyncWorker
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.github.florent37.runtimepermission.kotlin.askPermission
@@ -54,15 +55,15 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
 
         askPermission(Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG) {
-            val vers = android.os.Build.VERSION.SDK_INT
+            val version = android.os.Build.VERSION.SDK_INT
             when {
-                vers >= android.os.Build.VERSION_CODES.Q -> {
+                version >= android.os.Build.VERSION_CODES.Q -> {
                     val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
                     val intent = roleManager.createRequestRoleIntent("android.app.role.CALL_SCREENING")
                     startActivityForResult(intent, CALL_SCREENING_REQ_CODE)
                 }
 
-                vers == android.os.Build.VERSION_CODES.P -> {
+                version == android.os.Build.VERSION_CODES.P -> {
                     askPermission(Manifest.permission.ANSWER_PHONE_CALLS) {
                         init()
                     }.onDeclined {
@@ -86,14 +87,10 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        val c = requestCode
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
     private fun init() {
         if(hasUser()) {
             setupViewPager()
+            setSyncWorker()
         }
         else {
             login()
@@ -136,11 +133,11 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
 
         when(requestCode) {
             LOGIN_REQ_CODE -> {
-                val response = IdpResponse.fromResultIntent(data)
-
                 if (resultCode == RESULT_OK) {
                     setupViewPager()
+                    setSyncWorker()
                 } else {
+                    val response = IdpResponse.fromResultIntent(data)
                     response?.error?.run {
                         MaterialDialog(this@MainActivity).show {
                             val errorMessage = "$localizedMessage ${getString(R.string.retry)}"

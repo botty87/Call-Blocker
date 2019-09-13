@@ -12,6 +12,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.*
 import es.dmoral.toasty.Toasty
 import timber.log.Timber
 
@@ -78,3 +79,15 @@ fun EditText.onTextChanged(listener: (String?) -> Unit) {
         override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
     })
 }
+
+fun Query.addSnapshotListenerLogException(action: ((QuerySnapshot?) -> Unit)): ListenerRegistration =
+    addSnapshotListener { snapshot, exception ->
+        exception?.log()
+        action.invoke(snapshot)
+    }
+
+fun DocumentReference.addSnapshotListenerLogException(action: ((DocumentSnapshot?) -> Unit)): ListenerRegistration =
+    addSnapshotListener { snapshot, exception ->
+        exception?.log()
+        action.invoke(snapshot)
+    }

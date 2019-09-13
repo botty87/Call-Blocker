@@ -46,7 +46,7 @@
         </activity>
 
         <service
-                android:name=".receiver.MyCallScreeningService"
+                android:name=".receiver.calls.MyCallScreeningService"
                 android:permission="android.permission.BIND_SCREENING_SERVICE">
             <intent-filter>
                 <action android:name="android.telecom.CallScreeningService"/>
@@ -54,7 +54,7 @@
         </service>
 
         <service
-                android:name=".receiver.oldCallReceiver.BlockService"
+                android:name=".receiver.calls.compatReceiver.BlockService"
                 android:exported="false" >
             <intent-filter>
                 <action android:name="com.call.blocker.receiver.oldCallReceiver.BlockService" />
@@ -62,7 +62,7 @@
         </service>
 
         <receiver
-                android:name=".receiver.oldCallReceiver.IncomingCallReceiver"
+                android:name=".receiver.calls.compatReceiver.IncomingCallReceiver"
                 android:enabled="true"
                 android:exported="true">
             <intent-filter>

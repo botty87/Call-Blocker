@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.call.blocker.R
 import com.call.blocker.data.cacheCountryData
 import com.call.blocker.data.country.Country
+import com.call.blocker.data.updateUserCountriesDB
 import com.call.blocker.tools.observe
 import com.call.blocker.tools.onTextChanged
 import kotlinx.android.synthetic.main.fragment_countries.*
@@ -23,6 +24,7 @@ import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.Unregistrar
 
 class CountriesFragment : Fragment(), CoroutineScope by MainScope(), CountryListener {
+
     private val viewModel by lazy { ViewModelProvider(this).get(CountriesFragmentViewModel::class.java) }
     //private val countriesLayoutManager by lazy { LinearLayoutManager(context, RecyclerView.VERTICAL, false) }
     private val countriesAdapter by lazy {
@@ -82,6 +84,7 @@ class CountriesFragment : Fragment(), CoroutineScope by MainScope(), CountryList
         if(country.selected) {
             activity?.cacheCountryData(country.code)
         }
+        updateUserCountriesDB(viewModel.countries)
     }
 
     internal inner class OnKeyboardLifecycleObserver(private val activity: Activity) : LifecycleObserver {

@@ -1,4 +1,4 @@
-package com.call.blocker.receiver
+package com.call.blocker.receiver.calls
 
 import android.telecom.Call
 import android.telecom.CallScreeningService
@@ -8,21 +8,22 @@ import com.google.firebase.firestore.ListenerRegistration
 
 class MyCallScreeningService: CallScreeningService() {
 
-    private var userListener: ListenerRegistration? = null
+    private var listeners: List<ListenerRegistration>? = null
 
     override fun onScreenCall(callDetails: Call.Details) {
         val number = callDetails.handle.schemeSpecificPart
         clearListeners()
 
-        userListener = when(SettingsContainer.filterMode) {
+        listeners = when(SettingsContainer.filterMode) {
             SettingsContainer.Filter.ALLOW_ALL -> {
                 CommonBlockTools.checkAllowEndCall(number,
                     { endCall(callDetails, it) },
                     { allowCall(callDetails) })
             }
-            SettingsContainer.Filter.BLOCK_ALL -> CommonBlockTools.checkBlockEndCall(number,
+            SettingsContainer.Filter.BLOCK_ALL -> CommonBlockTools.checkBlockEndCall(
+                number,
                 { endCall(callDetails, it) },
-                {allowCall(callDetails)})
+                { allowCall(callDetails) })
         }
     }
 
@@ -53,7 +54,7 @@ class MyCallScreeningService: CallScreeningService() {
     }
 
     private fun clearListeners() {
-        userListener?.remove()
-        userListener = null
+        listeners?.forEach { it.remove() }
+        listeners = null
     }
 }

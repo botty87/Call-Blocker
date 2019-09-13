@@ -1,17 +1,30 @@
 package com.call.blocker.data
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
+import android.provider.Settings
+import androidx.work.ListenableWorker
 import com.call.blocker.R
+import com.call.blocker.data.country.CountriesLiveData
 import com.call.blocker.fragments.allowedBlockedFragment.AllowedBlockedSuperFragment
+import com.call.blocker.fragments.countriesFragment.CountriesFragment
+import com.call.blocker.receiver.calls.CommonBlockTools
 import com.call.blocker.settingsActivity.SettingsActivity
 import com.call.blocker.tools.getUser
 import com.call.blocker.tools.log
 import com.firebase.ui.firestore.SnapshotParser
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -21,7 +34,8 @@ private const val BLOCKED_KEY = "blocked"
 private const val ALLOWED_KEY = "allowed"
 private const val NUMBER_FIELD_KEY = "number"
 private const val DESCRIPTION_FIELD_KEY = "description"
-private const val COUNTRIES_KEY = "countries"
+const val COUNTRIES_KEY = "countries"
+private const val SYNC_REPORTS_KEY = "sync reports"
 
 val userDocument: DocumentReference
     get() {
@@ -114,6 +128,20 @@ fun Activity.cacheCountryData(country: String) {
         .addOnFailureListener(this) { it.log() }
 }
 
+fun CountriesFragment.updateUserCountriesDB(countriesLiveData: CountriesLiveData) {
+    launch(Dispatchers.Default) {
+        countriesLiveData.userUpdate = true
+        countriesLiveData.value!!.filter { it.selected }.map { it.code }.let {countriesCode ->
+            userDocument.set(hashMapOf(COUNTRIES_KEY to countriesCode))
+                .addOnFailureListener(activity!!) { it.log() }
+        }
+    }
+}
+
+fun CommonBlockTools.findCountryBlockedNumberQuery(country: String, number: String) =
+    countriesRef.document(country).collection(BLOCKED_KEY).whereEqualTo(NUMBER_FIELD_KEY, number)
+
+
 suspend fun SettingsActivity.deleteUserData() = suspendCoroutine<Void> { continuation ->
     userDocument.delete()
         .addOnSuccessListener(this) { continuation.resume(it) }
@@ -121,4 +149,72 @@ suspend fun SettingsActivity.deleteUserData() = suspendCoroutine<Void> { continu
             exception.log()
             continuation.resumeWithException(exception)
         }
+}
+
+object DB{
+
+    private const val TOTAL_OPERATIONS = 3
+    suspend fun sync(context: Context) = suspendCoroutine<ListenableWorker.Result> { continuation ->
+        val isNotResumed = AtomicBoolean(true)
+        val startTime = Date()
+        val operationsCompleted = AtomicInteger(0)
+
+        @SuppressLint("HardwareIds")
+        fun logSyncCompleted(exception: Exception? = null) {
+            val deviceID = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+            val endTime = Date()
+            val report = SyncReport(deviceID, startTime, endTime, exception?.message)
+            userDocument.collection(SYNC_REPORTS_KEY).document().set(report)
+        }
+
+        fun resume(result: ListenableWorker.Result) {
+            if(isNotResumed.getAndSet(false)) {
+                continuation.resume(result)
+            }
+        }
+
+        fun markOperationCompletedAndContinue() {
+            if(operationsCompleted.incrementAndGet() == TOTAL_OPERATIONS) {
+                logSyncCompleted()
+                resume(ListenableWorker.Result.success())
+            }
+        }
+
+        fun onFail(e: Exception) {
+            e.log()
+            logSyncCompleted(e)
+            resume(ListenableWorker.Result.failure())
+        }
+
+        fun retrieveCountriesList(snapshot: DocumentSnapshot) {
+            val userCountries = snapshot.get(COUNTRIES_KEY) as MutableList<String>?
+            userCountries?.run {
+                val countriesCounter = AtomicInteger(0)
+                fun markCountryCompletedAndContinue() {
+                    if(countriesCounter.incrementAndGet() == this.size) {
+                        markOperationCompletedAndContinue()
+                    }
+                }
+
+                this.forEach { country ->
+                    countriesRef.document(country).collection(BLOCKED_KEY).get(Source.SERVER)
+                        .addOnSuccessListener { markCountryCompletedAndContinue() }
+                        .addOnFailureListener (::onFail)
+                }
+
+            } ?: markOperationCompletedAndContinue()
+        }
+
+        userBlockedRef.get(Source.SERVER)
+            .addOnSuccessListener { markOperationCompletedAndContinue() }
+            .addOnFailureListener (::onFail)
+
+        userAllowedRef.get(Source.SERVER)
+            .addOnSuccessListener { markOperationCompletedAndContinue() }
+            .addOnFailureListener (::onFail)
+
+        userDocument.get(Source.SERVER)
+            .addOnSuccessListener (::retrieveCountriesList)
+            .addOnFailureListener (::onFail)
+    }
 }

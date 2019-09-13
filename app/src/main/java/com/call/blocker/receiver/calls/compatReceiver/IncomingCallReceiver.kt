@@ -1,4 +1,4 @@
-package com.call.blocker.receiver.oldCallReceiver
+package com.call.blocker.receiver.calls.compatReceiver
 
 import android.content.BroadcastReceiver
 import android.content.ComponentName
@@ -9,7 +9,7 @@ import android.telephony.TelephonyManager
 import com.call.blocker.data.SettingsContainer
 import com.call.blocker.data.SettingsContainer.ApplyTo.NONE
 import com.call.blocker.data.SettingsContainer.ApplyTo.SMS
-import com.call.blocker.receiver.oldCallReceiver.BlockService.Companion.NUMBER_KEY
+import com.call.blocker.receiver.calls.compatReceiver.BlockService.Companion.NUMBER_KEY
 import org.jetbrains.anko.startService
 import org.jetbrains.anko.stopService
 

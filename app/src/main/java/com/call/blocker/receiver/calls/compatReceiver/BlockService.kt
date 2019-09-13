@@ -1,4 +1,4 @@
-package com.call.blocker.receiver.oldCallReceiver
+package com.call.blocker.receiver.calls.compatReceiver
 
 import android.app.Service
 import android.content.Context
@@ -9,7 +9,7 @@ import android.telephony.TelephonyManager
 import com.android.internal.telephony.ITelephony
 import com.call.blocker.data.*
 import com.call.blocker.data.SettingsContainer.Filter.*
-import com.call.blocker.receiver.CommonBlockTools
+import com.call.blocker.receiver.calls.CommonBlockTools
 import com.call.blocker.tools.log
 import com.google.firebase.firestore.ListenerRegistration
 
@@ -22,7 +22,7 @@ class BlockService: Service() {
         return null
     }
 
-    private var userListener: ListenerRegistration? = null
+    private var listeners: List<ListenerRegistration>? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         clearListeners()
@@ -39,8 +39,8 @@ class BlockService: Service() {
     }
 
     private fun clearListeners() {
-        userListener?.remove()
-        userListener = null
+        listeners?.forEach { it.remove() }
+        listeners = null
     }
 
     private fun blockNumber(number: String) {
@@ -52,8 +52,7 @@ class BlockService: Service() {
                     m.isAccessible = true
                     val telService = m.invoke(telManager) as ITelephony
                     telService.endCall()
-                }
-                else {
+                } else {
                     val telManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
                     telManager.endCall()
                 }
@@ -64,7 +63,7 @@ class BlockService: Service() {
             }
         }
 
-        userListener = when(SettingsContainer.filterMode) {
+        listeners = when(SettingsContainer.filterMode) {
             ALLOW_ALL -> CommonBlockTools.checkAllowEndCall(number, ::endCall)
             BLOCK_ALL -> CommonBlockTools.checkBlockEndCall(number, ::endCall)
         }
