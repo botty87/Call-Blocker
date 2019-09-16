@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        package="com.call.blocker">
+        package="com.botty.callblocker">
     <uses-feature android:name="android.hardware.telephony"
             android:required="true"/>
 
@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
-            android:name=".MyApplication"
+            android:name="com.botty.callblocker.MyApplication"
             android:allowBackup="false"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
@@ -23,19 +23,19 @@
             tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-                android:name=".settingsActivity.SettingsActivity"
+                android:name="com.botty.callblocker.settingsActivity.SettingsActivity"
                 android:label="@string/settings"
                 android:launchMode="singleTask"
-                android:parentActivityName=".MainActivity"
+                android:parentActivityName="com.botty.callblocker.MainActivity"
                 android:screenOrientation="portrait"
                 android:windowSoftInputMode="stateAlwaysHidden|adjustPan">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
-                    android:value=".MainActivity" />
+                    android:value="com.botty.callblocker.MainActivity" />
         </activity>
 
         <activity
-                android:name=".MainActivity"
+                android:name="com.botty.callblocker.MainActivity"
                 android:launchMode="singleTask"
                 android:screenOrientation="portrait"
                 android:windowSoftInputMode="stateAlwaysHidden|adjustPan">
@@ -46,7 +46,7 @@
         </activity>
 
         <service
-                android:name=".receiver.calls.MyCallScreeningService"
+                android:name="com.botty.callblocker.receiver.calls.MyCallScreeningService"
                 android:permission="android.permission.BIND_SCREENING_SERVICE">
             <intent-filter>
                 <action android:name="android.telecom.CallScreeningService"/>
@@ -54,7 +54,7 @@
         </service>
 
         <service
-                android:name=".receiver.calls.compatReceiver.BlockService"
+                android:name="com.botty.callblocker.receiver.calls.compatReceiver.BlockService"
                 android:exported="false" >
             <intent-filter>
                 <action android:name="com.call.blocker.receiver.oldCallReceiver.BlockService" />
@@ -62,7 +62,7 @@
         </service>
 
         <receiver
-                android:name=".receiver.calls.compatReceiver.IncomingCallReceiver"
+                android:name="com.botty.callblocker.receiver.calls.compatReceiver.IncomingCallReceiver"
                 android:enabled="true"
                 android:exported="true">
             <intent-filter>

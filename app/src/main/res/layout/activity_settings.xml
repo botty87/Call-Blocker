@@ -3,7 +3,7 @@
     <data>
         <variable
                 name="settings"
-                type="com.call.blocker.settingsActivity.SettingsViewModel" />
+                type="com.botty.callblocker.settingsActivity.SettingsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

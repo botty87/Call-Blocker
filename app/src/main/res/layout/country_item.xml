@@ -4,7 +4,7 @@
     <data>
         <variable
                 name="country"
-                type="com.call.blocker.data.country.Country" />
+                type="com.botty.callblocker.data.country.Country" />
     </data>
 
     <LinearLayout

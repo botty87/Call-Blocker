@@ -6,7 +6,7 @@
     <data>
         <variable
                 name="phoneNumber"
-                type="com.call.blocker.data.PhoneNumber" />
+                type="com.botty.callblocker.data.PhoneNumber" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
