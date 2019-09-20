@@ -1,15 +1,26 @@
 package com.botty.callblocker.tools
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import com.botty.callblocker.BuildConfig
+import com.crashlytics.android.Crashlytics
+import com.github.florent37.inlineactivityresult.kotlin.startForResult
+import com.github.florent37.inlineactivityresult.Result
+import com.github.florent37.inlineactivityresult.kotlin.KotlinActivityResult
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
@@ -42,7 +53,9 @@ fun Context.showWarningToast(stringID: Int, length: Int = Toasty.LENGTH_SHORT) {
 
 fun Throwable.log() {
     Timber.e(this)
-    //TODO implements
+    if(!BuildConfig.DEBUG) {
+        Crashlytics.logException(this)
+    }
 }
 
 fun Editable.toStringTrim(): String {
@@ -80,6 +93,19 @@ fun EditText.onTextChanged(listener: (String?) -> Unit) {
     })
 }
 
+fun EditText.clear() {
+    setText("")
+}
+
+fun AdView.loadAdLogExceptions() {
+    this.adListener = object : AdListener() {
+        override fun onAdFailedToLoad(errorCode: Int) {
+            Exception("Ad fail load. Code $errorCode").log()
+        }
+    }
+    AdRequest.Builder().build().run { loadAd(this) }
+}
+
 fun Query.addSnapshotListenerLogException(action: ((QuerySnapshot?) -> Unit)): ListenerRegistration =
     addSnapshotListener { snapshot, exception ->
         exception?.log()
@@ -91,3 +117,6 @@ fun DocumentReference.addSnapshotListenerLogException(action: ((DocumentSnapshot
         exception?.log()
         action.invoke(snapshot)
     }
+
+inline fun <reified T> FragmentActivity.startForResultTest(noinline block: (Result) -> Unit)
+        : KotlinActivityResult = startForResult(Intent(this, T::class.java), block)

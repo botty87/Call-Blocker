@@ -23,7 +23,7 @@ fun MainActivity.setSyncWorker() {
         .setRequiresBatteryNotLow(true)
         .build()
 
-    val workReq = PeriodicWorkRequestBuilder<SyncWorker>(1, TimeUnit.HOURS, 20, TimeUnit.MINUTES)
+    val workReq = PeriodicWorkRequestBuilder<SyncWorker>(2, TimeUnit.HOURS, 20, TimeUnit.MINUTES)
         .addTag(TAG)
         .setConstraints(const)
         .build()

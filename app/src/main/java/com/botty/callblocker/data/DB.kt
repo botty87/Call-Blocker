@@ -14,14 +14,13 @@ import com.botty.callblocker.settingsActivity.SettingsActivity
 import com.botty.callblocker.tools.getUser
 import com.botty.callblocker.tools.log
 import com.firebase.ui.firestore.SnapshotParser
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.joda.time.DateTime
+import org.joda.time.Minutes
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -33,9 +32,11 @@ private const val USERS_KEY = "users"
 private const val BLOCKED_KEY = "blocked"
 private const val ALLOWED_KEY = "allowed"
 private const val NUMBER_FIELD_KEY = "number"
+private const val DATE_FIELD_KEY = "date"
 private const val DESCRIPTION_FIELD_KEY = "description"
 const val COUNTRIES_KEY = "countries"
 private const val SYNC_REPORTS_KEY = "sync reports"
+private const val BLOCKED_CALLS_LOG_KEY = "blocked calls log"
 
 val userDocument: DocumentReference
     get() {
@@ -44,21 +45,22 @@ val userDocument: DocumentReference
 
 private val userBlockedRef: CollectionReference
     get() {
-        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid).collection(
-            BLOCKED_KEY
-        )
+        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid).collection(BLOCKED_KEY)
     }
 
 private val userAllowedRef: CollectionReference
     get() {
-        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid).collection(
-            ALLOWED_KEY
-        )
+        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid).collection(ALLOWED_KEY)
     }
 
 private val countriesRef: CollectionReference
     get() {
         return Firebase.firestore.collection(COUNTRIES_KEY)
+    }
+
+private val blockedCallsLogRef: CollectionReference
+    get() {
+        return Firebase.firestore.collection(USERS_KEY).document(getUser()!!.uid).collection(BLOCKED_CALLS_LOG_KEY)
     }
 
 suspend fun AllowedBlockedSuperFragment.addAllowedPhone(phoneNumber: PhoneNumber) {
@@ -141,6 +143,14 @@ fun CountriesFragment.updateUserCountriesDB(countriesLiveData: CountriesLiveData
 fun CommonBlockTools.findCountryBlockedNumberQuery(country: String, number: String) =
     countriesRef.document(country).collection(BLOCKED_KEY).whereEqualTo(NUMBER_FIELD_KEY, number)
 
+fun CommonBlockTools.getMultipleCallsQuery(number: String, numberOfCalls: Int, minutesRange: Int): Query {
+    //val dateTimeRange = DateTime.now().minusMinutes(minutesRange) TODO restore
+    val dateTimeRange = DateTime.now().minusDays(1)
+
+    return blockedCallsLogRef.whereEqualTo(NUMBER_FIELD_KEY, number)
+        .whereGreaterThan(DATE_FIELD_KEY, dateTimeRange.toDate())
+        .limit(numberOfCalls.toLong())
+}
 
 suspend fun SettingsActivity.deleteUserData() = suspendCoroutine<Void> { continuation ->
     userDocument.delete()
@@ -151,9 +161,12 @@ suspend fun SettingsActivity.deleteUserData() = suspendCoroutine<Void> { continu
         }
 }
 
-object DB{
+fun BlockedCall.log() {
+    blockedCallsLogRef.document().set(this).addOnFailureListener { it.log() }
+}
 
-    private const val TOTAL_OPERATIONS = 3
+object DB{
+    private const val TOTAL_OPERATIONS = 4
     suspend fun sync(context: Context) = suspendCoroutine<ListenableWorker.Result> { continuation ->
         val isNotResumed = AtomicBoolean(true)
         val startTime = Date()
@@ -164,7 +177,8 @@ object DB{
             val deviceID = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
             val endTime = Date()
             val report = SyncReport(deviceID, startTime, endTime, exception?.message)
-            userDocument.collection(SYNC_REPORTS_KEY).document().set(report)
+            userDocument.collection(SYNC_REPORTS_KEY).document(deviceID).set(report)
+                .addOnFailureListener { it.log() }
         }
 
         fun resume(result: ListenableWorker.Result) {
@@ -216,5 +230,14 @@ object DB{
         userDocument.get(Source.SERVER)
             .addOnSuccessListener (::retrieveCountriesList)
             .addOnFailureListener (::onFail)
+
+        if(SettingsContainer.ringOnMultipleCalls) {
+            val dateTimeRange = DateTime.now().minusDays(SettingsContainer.minutes)
+            blockedCallsLogRef.whereGreaterThan(DATE_FIELD_KEY, dateTimeRange.toDate()).get(Source.SERVER)
+                .addOnSuccessListener{ markOperationCompletedAndContinue() }
+                .addOnFailureListener (::onFail)
+        } else {
+            markOperationCompletedAndContinue()
+        }
     }
 }

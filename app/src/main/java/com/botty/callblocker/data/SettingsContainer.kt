@@ -9,26 +9,26 @@ import kotlin.reflect.KProperty0
 
 object SettingsContainer: KotprefModel() {
     private const val DEFAULT_READ_FROM_CONTACTS = false
-    private const val DEFAULT_NOTIFICATION_ENABLED = false
+    private const val DEFAULT_NOTIFICATION_ENABLED = true
     private val DEFAULT_FILTER_MODE = Filter.ALLOW_ALL
-    private val DEFAULT_APPLY_TO = ApplyTo.BOTH
+    private const val DEFAULT_MULTIPLE_CALLS_RING = false
+    private const val DEFAULT_CALLS_AND_MINUTES = 2
 
     var readFromContacts by booleanPref(DEFAULT_READ_FROM_CONTACTS)
     var filterMode by enumValuePref(DEFAULT_FILTER_MODE)
-    var applyTo by enumValuePref(DEFAULT_APPLY_TO)
     var isNotificationEnabled by booleanPref(DEFAULT_NOTIFICATION_ENABLED)
+    var ringOnMultipleCalls by booleanPref(DEFAULT_MULTIPLE_CALLS_RING)
+    var calls by intPref(DEFAULT_CALLS_AND_MINUTES)
+    var minutes by intPref(DEFAULT_CALLS_AND_MINUTES)
 
     fun resetToDefault() {
         readFromContacts = DEFAULT_READ_FROM_CONTACTS
         filterMode = DEFAULT_FILTER_MODE
-        applyTo = DEFAULT_APPLY_TO
         isNotificationEnabled = DEFAULT_NOTIFICATION_ENABLED
+        ringOnMultipleCalls = DEFAULT_MULTIPLE_CALLS_RING
+        calls = DEFAULT_CALLS_AND_MINUTES
+        minutes = DEFAULT_CALLS_AND_MINUTES
     }
 
     enum class Filter {ALLOW_ALL, BLOCK_ALL}
-    enum class ApplyTo {BOTH, CALL, SMS, NONE}
-}
-
-fun <T> KotprefModel.observeProperty(property: KProperty0<T>, owner: LifecycleOwner, action: ((T) -> Unit)) {
-    this.asLiveData(property).observe(owner, action)
 }

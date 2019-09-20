@@ -38,4 +38,9 @@
     <string name="calls_blocked">Calls blocked</string>
     <string name="call_blocked">Call blocked</string>
     <string name="search">Search</string>
+    <string name="ring_when_there_are_calls_from_the_same_number">Ring when there are calls from the same number</string>
+    <string name="call_log">Call log</string>
+    <string name="calls_in">calls in</string>
+    <string name="minutes">minutes</string>
+    <string name="suggest">Suggest</string>
 </resources>

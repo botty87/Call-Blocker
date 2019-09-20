@@ -26,6 +26,8 @@ import com.botty.callblocker.tools.*
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.github.florent37.runtimepermission.kotlin.askPermission
 import com.tomash.androidcontacts.contactgetter.main.contactsGetter.ContactsGetterBuilder
+import com.wickerlabs.logmanager.LogObject
+import com.wickerlabs.logmanager.LogsManager
 import es.dmoral.toasty.Toasty
 import io.michaelrocks.libphonenumber.android.PhoneNumberUtil
 import kotlinx.android.synthetic.main.add_number_view.*
@@ -118,6 +120,36 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
             }
         }
 
+        fun readCallLog(dialog: MaterialDialog, contactsPermission: Boolean) {
+            fun onCallLogClick(callLog: LogObject) {
+                dialog.getCustomView().run {
+                    editTextPhoneNumber.setText(callLog.number)
+                    if(callLog.number != callLog.contactName) {
+                        editTextDescription.setText(callLog.contactName)
+                    } else {
+                        editTextDescription.clear()
+                    }
+                }
+            }
+
+            launch(Dispatchers.Default) {
+                val logsManager = LogsManager(context)
+                val calls = logsManager.getLogs(LogsManager.ALL_CALLS)
+                    .filter { it.type != LogsManager.OUTGOING_CALLS }.subList(0, 8)
+
+                withContext(Dispatchers.Main) {
+                    dialog.getCustomView().run {
+                        recyclerViewCallLog.layoutManager =
+                            LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+                        recyclerViewCallLog.setHasFixedSize(false)
+                        recyclerViewCallLog.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
+                        recyclerViewCallLog.adapter = CallLogAdapter(calls, contactsPermission)
+                            .apply { onCallLogClick = ::onCallLogClick }
+                    }
+                }
+            }
+        }
+
         MaterialDialog(context!!, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
             customView(R.layout.add_number_view, noVerticalPadding = true)
             getCustomView().run {
@@ -160,6 +192,11 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
                         editTextDescription.setAdapter(null)
                     }
                 }
+                askPermission(Manifest.permission.READ_CONTACTS) {
+                    readCallLog(this@show, true)
+                }.onDeclined {
+                    readCallLog(this@show, false)
+                }
             }
         }
     }
@@ -173,10 +210,7 @@ class AllowedBlockedSuperFragment(private val type: Type) : Fragment(), Coroutin
         recyclerViewNumbers.run {
             layoutManager = LinearLayoutManager(context)
             addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
-            adapter = PhoneNumberAdapter(
-                options,
-                ::onPhoneNumberRemove
-            )
+            adapter = PhoneNumberAdapter(options, ::onPhoneNumberRemove)
         }
     }
 

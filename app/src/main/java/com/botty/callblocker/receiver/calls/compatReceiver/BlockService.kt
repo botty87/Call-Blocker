@@ -64,8 +64,8 @@ class BlockService: Service() {
         }
 
         listeners = when(SettingsContainer.filterMode) {
-            ALLOW_ALL -> CommonBlockTools.checkAllowEndCall(number, ::endCall)
-            BLOCK_ALL -> CommonBlockTools.checkBlockEndCall(number, ::endCall)
+            ALLOW_ALL -> CommonBlockTools.allowAllExceptBlocked(number, ::endCall)
+            BLOCK_ALL -> CommonBlockTools.blockAllExceptAllowed(number, ::endCall)
         }
     }
 }

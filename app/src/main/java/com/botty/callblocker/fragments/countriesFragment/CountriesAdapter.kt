@@ -25,9 +25,7 @@ class CountriesAdapter : RecyclerView.Adapter<CountriesAdapter.Holder>() {
         countries.submitList(newCountries)
     }
 
-    override fun getItemCount(): Int {
-        return countries.currentList.size
-    }
+    override fun getItemCount(): Int = countries.currentList.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val binding = DataBindingUtil.inflate<CountryItemBinding>(LayoutInflater

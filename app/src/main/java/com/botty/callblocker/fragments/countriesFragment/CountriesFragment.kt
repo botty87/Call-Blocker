@@ -27,14 +27,7 @@ class CountriesFragment : Fragment(), CoroutineScope by MainScope(), CountryList
 
     private val viewModel by lazy { ViewModelProvider(this).get(CountriesFragmentViewModel::class.java) }
     //private val countriesLayoutManager by lazy { LinearLayoutManager(context, RecyclerView.VERTICAL, false) }
-    private val countriesAdapter by lazy {
-        CountriesAdapter().apply {
-            recyclerViewCountries.setHasFixedSize(true)
-            recyclerViewCountries.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-            recyclerViewCountries.adapter = this
-            countryListener = this@CountriesFragment
-        }
-    }
+    private lateinit var countriesAdapter: CountriesAdapter
     private var searchJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +40,17 @@ class CountriesFragment : Fragment(), CoroutineScope by MainScope(), CountryList
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        fun initRecyclerViewCountries() {
+            recyclerViewCountries.setHasFixedSize(true)
+            recyclerViewCountries.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+            recyclerViewCountries.adapter = CountriesAdapter().apply {
+                countryListener = this@CountriesFragment
+                countriesAdapter = this
+            }
+        }
+
         super.onViewCreated(view, savedInstanceState)
+        initRecyclerViewCountries()
 
         viewModel.countries.observe(this) { countries ->
             filterCountry(editTextSearch.text?.toString(), countries)

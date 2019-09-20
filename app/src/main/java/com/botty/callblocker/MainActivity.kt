@@ -15,25 +15,29 @@ import com.botty.callblocker.fragments.MyPagerAdapter
 import com.botty.callblocker.fragments.allowedBlockedFragment.AllowedBlockedFragmentInterface
 import com.botty.callblocker.fragments.allowedBlockedFragment.AllowedBlockedSuperFragment
 import com.botty.callblocker.settingsActivity.SettingsActivity
-import com.botty.callblocker.tools.Constants
-import com.botty.callblocker.tools.Constants.CALL_SCREENING_REQ_CODE
-import com.botty.callblocker.tools.Constants.LOGIN_REQ_CODE
-import com.botty.callblocker.tools.Constants.SETTINGS_ACTIVITY_REQ_CODE
-import com.botty.callblocker.tools.OnPageSelectedListener
-import com.botty.callblocker.tools.hasUser
-import com.botty.callblocker.tools.showErrorToast
+import com.botty.callblocker.tools.*
 import com.botty.callblocker.tools.snackBarProgressKotlin.SnackBarOnAction
 import com.botty.callblocker.tools.snackBarProgressKotlin.SnackBarOnShown
 import com.botty.callblocker.tools.sync.setSyncWorker
+import com.crashlytics.android.Crashlytics
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
+import com.github.florent37.inlineactivityresult.kotlin.startForResult
 import com.github.florent37.runtimepermission.kotlin.askPermission
+import com.google.android.gms.ads.AdListener
 import com.tingyik90.snackprogressbar.SnackProgressBar
 import com.tingyik90.snackprogressbar.SnackProgressBarManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.anko.startActivityForResult
+import androidx.core.app.ComponentActivity
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import com.google.android.gms.ads.AdRequest
 
 
 class MainActivity : AppCompatActivity(), OnPageSelectedListener,
@@ -60,7 +64,12 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
                 version >= android.os.Build.VERSION_CODES.Q -> {
                     val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
                     val intent = roleManager.createRequestRoleIntent("android.app.role.CALL_SCREENING")
-                    startActivityForResult(intent, CALL_SCREENING_REQ_CODE)
+                    startForResult(intent) {
+                        init()
+                    }.onFailed {
+                        showErrorToast(R.string.no_app_permission)
+                        finish()
+                    }
                 }
 
                 version == android.os.Build.VERSION_CODES.P -> {
@@ -73,15 +82,6 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
 
                 else -> init()
             }
-
-            /*if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
-                val intent = roleManager.createRequestRoleIntent("android.app.role.CALL_SCREENING")
-                startActivityForResult(intent, CALL_SCREENING_REQ_CODE)
-            }
-            else {
-                init()
-            }*/
         }.onDeclined {
             endNoPermission()
         }
@@ -89,6 +89,7 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
 
     private fun init() {
         if(hasUser()) {
+            adView.loadAdLogExceptions()
             setupViewPager()
             setSyncWorker()
         }
@@ -119,54 +120,29 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
             AuthUI.IdpConfig.PhoneBuilder().build(),
             AuthUI.IdpConfig.GoogleBuilder().build())
 
-        startActivityForResult(AuthUI.getInstance()
+        val loginIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setIsSmartLockEnabled(!BuildConfig.DEBUG)
             .setAvailableProviders(providers)
-            .build(),
-            LOGIN_REQ_CODE
-        )
-    }
+            .build()
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        when(requestCode) {
-            LOGIN_REQ_CODE -> {
-                if (resultCode == RESULT_OK) {
-                    setupViewPager()
-                    setSyncWorker()
-                } else {
-                    val response = IdpResponse.fromResultIntent(data)
-                    response?.error?.run {
-                        MaterialDialog(this@MainActivity).show {
-                            val errorMessage = "$localizedMessage ${getString(R.string.retry)}"
-                            title(R.string.error)
-                            message(text = errorMessage)
-                            cancelable(false)
-                            negativeButton(R.string.no) { finish() }
-                            positiveButton(R.string.yes) { login() }
-                        }
-                    } ?: finish()
+        startForResult(loginIntent) {
+            setupViewPager()
+            setSyncWorker()
+        }.onFailed { result ->
+            val response = IdpResponse.fromResultIntent(result.data)
+            response?.error?.run {
+                MaterialDialog(this@MainActivity).show {
+                    val errorMessage = "$localizedMessage ${getString(R.string.retry)}"
+                    title(R.string.error)
+                    message(text = errorMessage)
+                    cancelable(false)
+                    negativeButton(R.string.no) { finish() }
+                    positiveButton(R.string.yes) { login() }
                 }
-            }
-
-            SETTINGS_ACTIVITY_REQ_CODE -> {
-                if(resultCode == RESULT_OK && data?.getBooleanExtra(Constants.LOGOUT_RESULT_KEY, false) == true) {
-                    login()
-                }
-            }
-
-            CALL_SCREENING_REQ_CODE -> {
-                if(resultCode == android.app.Activity.RESULT_OK) {
-                    init()
-                }
-                else {
-                    showErrorToast(R.string.no_app_permission)
-                    finish()
-                }
-            }
+            } ?: finish()
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -176,7 +152,14 @@ class MainActivity : AppCompatActivity(), OnPageSelectedListener,
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_settings) {
-            startActivityForResult<SettingsActivity>(SETTINGS_ACTIVITY_REQ_CODE)
+            startForResultTest<SettingsActivity> { result ->
+                if(result.data?.getBooleanExtra(Constants.LOGOUT_RESULT_KEY, false) == true) {
+                    launch {
+                        delay(300)
+                        login()
+                    }
+                }
+            }
             return true
         }
         return super.onOptionsItemSelected(item)

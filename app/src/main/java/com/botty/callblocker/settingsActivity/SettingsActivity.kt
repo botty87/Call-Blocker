@@ -5,16 +5,17 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import com.afollestad.materialdialogs.MaterialDialog
 import com.botty.callblocker.R
 import com.botty.callblocker.data.SettingsContainer
 import com.botty.callblocker.data.deleteUserData
-import com.botty.callblocker.data.observeProperty
 import com.botty.callblocker.databinding.ActivitySettingsBinding
 import com.botty.callblocker.tools.*
 import com.firebase.ui.auth.AuthUI
+import com.github.florent37.kotlin.pleaseanimate.please
 import com.github.florent37.runtimepermission.kotlin.askPermission
 import com.tingyik90.snackprogressbar.SnackProgressBar
 import com.tingyik90.snackprogressbar.SnackProgressBarManager
@@ -41,20 +42,11 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                     checkContactsPermission()
                 }
             }
-
-            SettingsContainer.observeProperty(SettingsContainer::applyTo, this) { applyTo ->
-                if(applyTo == SettingsContainer.ApplyTo.NONE) {
-                    showWarningToast(R.string.no_apply_to_warning, Toasty.LENGTH_LONG)
-                }
-            }
         }
 
         super.onCreate(savedInstanceState)
-        DataBindingUtil.setContentView<ActivitySettingsBinding>(this,
-            R.layout.activity_settings
-        ).let { binding ->
+        DataBindingUtil.setContentView<ActivitySettingsBinding>(this, R.layout.activity_settings).let { binding ->
             binding.lifecycleOwner = this
-
             binding.settings = this@SettingsActivity.settings
 
             //Check if we have all the permissions
@@ -72,16 +64,25 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         buttonLogout.setOnClickListener { logoutUser() }
         buttonDelete.setOnClickListener { deleteUser() }
-    }
 
-    private fun enableButton(enable: Boolean) {
-        buttonLogout.isEnabled = enable
-        buttonDelete.isEnabled = enable
+        settings.ringOnMultipleCalls.observe(this) { enabled ->
+            please(200) {
+                animate(layoutRepeatedCallsDetails) {
+                    if(enabled) {
+                        visible()
+                        originalScale()
+                    } else {
+                        invisible()
+                        scale(1f, 0f)
+                    }
+                }
+            }.start()
+        }
     }
 
     private fun deleteUser() {
         fun performDelete() {
-            enableButton(false)
+            settings.buttonsEnabled.value = false
             val snackProgress = SnackProgressBar(SnackProgressBar.TYPE_CIRCULAR, getString(R.string.user_delete))
                 .setSwipeToDismiss(false)
                 .setIsIndeterminate(true)
@@ -105,12 +106,12 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                         } else {
                             task.exception?.log()
                             showErrorToast(R.string.error_user_delete)
-                            enableButton(true)
+                            settings.buttonsEnabled.value = true
                         }
                     }
                 }.onFailure {
                     showErrorToast(R.string.error_user_delete)
-                    enableButton(true)
+                    settings.buttonsEnabled.value = true
                 }
             }
         }
@@ -125,7 +126,7 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     private fun logoutUser() {
         fun performLogout() {
-            enableButton(false)
+            settings.buttonsEnabled.value = false
             val snackProgress = SnackProgressBar(SnackProgressBar.TYPE_CIRCULAR, getString(R.string.user_logout))
                 .setSwipeToDismiss(false)
                 .setIsIndeterminate(true)
@@ -144,7 +145,7 @@ class SettingsActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                     else {
                         task.exception?.log()
                         showErrorToast(R.string.error_user_logout)
-                        enableButton(true)
+                        settings.buttonsEnabled.value = true
                     }
                 }
         }

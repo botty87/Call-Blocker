@@ -6,9 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.telephony.TelephonyManager
-import com.botty.callblocker.data.SettingsContainer
-import com.botty.callblocker.data.SettingsContainer.ApplyTo.NONE
-import com.botty.callblocker.data.SettingsContainer.ApplyTo.SMS
 import com.botty.callblocker.receiver.calls.compatReceiver.BlockService.Companion.NUMBER_KEY
 import org.jetbrains.anko.startService
 import org.jetbrains.anko.stopService
@@ -35,10 +32,7 @@ class IncomingCallReceiver: BroadcastReceiver() {
             return
         }
 
-        when(SettingsContainer.applyTo) {
-            SMS, NONE -> return
-            else -> blockCallService(number, context, state)
-        }
+        blockCallService(number, context, state)
     }
 
     private fun blockCallService(number: String, context: Context, state: String) {

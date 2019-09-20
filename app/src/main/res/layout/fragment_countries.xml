@@ -8,6 +8,8 @@
         android:paddingLeft="15dp"
         android:paddingRight="15dp"
         android:orientation="vertical"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
         tools:context=".fragments.allowedBlockedFragment.AllowedBlockedSuperFragment">
 
     <com.google.android.material.textfield.TextInputLayout

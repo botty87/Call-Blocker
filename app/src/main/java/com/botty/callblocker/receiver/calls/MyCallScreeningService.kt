@@ -16,12 +16,11 @@ class MyCallScreeningService: CallScreeningService() {
 
         listeners = when(SettingsContainer.filterMode) {
             SettingsContainer.Filter.ALLOW_ALL -> {
-                CommonBlockTools.checkAllowEndCall(number,
+                CommonBlockTools.allowAllExceptBlocked(number,
                     { endCall(callDetails, it) },
                     { allowCall(callDetails) })
             }
-            SettingsContainer.Filter.BLOCK_ALL -> CommonBlockTools.checkBlockEndCall(
-                number,
+            SettingsContainer.Filter.BLOCK_ALL -> CommonBlockTools.blockAllExceptAllowed(number,
                 { endCall(callDetails, it) },
                 { allowCall(callDetails) })
         }
